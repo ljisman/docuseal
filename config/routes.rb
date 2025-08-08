@@ -33,6 +33,7 @@ Rails.application.routes.draw do
     resources :attachments, only: %i[create]
     resources :submitter_email_clicks, only: %i[create]
     resources :submitter_form_views, only: %i[create]
+    post 'submissions/pdf_ce', to: 'submissions#create_from_pdf_ce'
     resources :submitters, only: %i[index show update]
     resources :submissions, only: %i[index show create destroy] do
       resources :documents, only: %i[index], controller: 'submission_documents'

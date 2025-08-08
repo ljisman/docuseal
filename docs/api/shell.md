@@ -2245,6 +2245,16 @@ curl --request POST \
   --data '{"name":"Test Submission Document","documents":[{"name":"string","file":"base64","fields":[{"name":"string","areas":[{"x":0,"y":0,"w":0,"h":0,"page":1}]}]}],"submitters":[{"role":"First Party","email":"john.doe@example.com"}]}'
 ```
 
+### Create a submission from PDF using CE
+
+```shell
+curl --request POST \
+  --url https://api.docuseal.com/api/submissions/pdf_ce \
+  --header 'X-Auth-Token: API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{"name":"Test","documents":[{"name":"sample.pdf","file":"BASE64","fields":[{"name":"Sig1","type":"signature","role":"First Party","areas":[{"x":120,"y":520,"w":180,"h":40,"page":1}]}]}],"submitters":[{"email":"alice@example.com","name":"Alice","role":"First Party"}],"send_email":false}'
+```
+
 ```json
 {
   "security": [
