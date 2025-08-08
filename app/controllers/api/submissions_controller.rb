@@ -5,7 +5,7 @@ module Api
     load_and_authorize_resource :template, only: :create
     load_and_authorize_resource :submission, only: %i[show index destroy]
 
-    before_action only: :create do
+    before_action only: %i[create create_from_pdf_ce] do
       authorize!(:create, Submission)
     end
 
@@ -85,6 +85,26 @@ module Api
       render json: { error: e.message }, status: :unprocessable_entity
     end
 
+    def create_from_pdf_ce
+      submission = Submissions::CreateFromPdfCe.call(
+        current_user:,
+        current_account:,
+        payload: create_from_pdf_ce_params.to_h
+      )
+
+      submitters_json = submission.submitters.map do |s|
+        Submitters::SerializeForApi.call(s, with_documents: false, with_urls: true, params:)
+      end
+
+      json = Submissions::SerializeForApi.call(submission, submission.submitters, params,
+                                               with_events: false, with_documents: false, with_values: false)
+      json['submitters'] = submitters_json
+
+      render json: json, status: :created
+    rescue Submissions::CreateFromPdfCe::BaseError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    end
+
     def destroy
       if params[:permanently].in?(['true', true])
         @submission.destroy!
@@ -139,6 +159,18 @@ module Api
       end
 
       json
+    end
+
+    def create_from_pdf_ce_params
+      params.permit(
+        :name, :send_email, :order, :reply_to, :bcc_completed, :completed_redirect_url, :expire_at,
+        { documents: [
+            :name, :file,
+            { fields: [:name, :type, :role, :required, { areas: %i[x y w h page] }] }
+          ],
+          fields: [:name, :type, :role, :required, { areas: %i[x y w h page] }],
+          submitters: [:email, :name, :role, :phone, { preferences: {} }] }
+      )
     end
 
     def create_submissions(template, params)
